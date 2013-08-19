@@ -8,9 +8,9 @@
 
 os.loadAPI("libccclass")
 
-ccEvent = class(function()
+ccEvent = class(function(cce)
 	-- Constructor
-	self._handlers = {}
+	cce._handlers = {}
 end)
 
 function ccEvent:register(event, callback)
