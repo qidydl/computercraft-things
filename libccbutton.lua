@@ -9,24 +9,9 @@
 os.loadAPI("libccclass")
 os.loadAPI("libccevent")
 
--- Find the monitor attached to the computer
-for i, side in pairs(rs.getSides()) do
-	if peripheral.getType(side) == "monitor" then
-		local monitor = peripheral.wrap(side)
-		if monitor.isColor() then
-			Button.monitor = monitor
-			break
-		end
-	end
-end
-
--- Verify we have a monitor attached to the computer
-if not Button.monitor then
-	error("Button api requires an Advanced Monitor")
-end
-
--- add a new button. colors are optional.
-Button = class(function (b, text, callback, xMin, xMax, yMin, yMax, color)
+-- Define the Button class and constructor
+Button = libccclass.class(function (b, text, callback, xMin, xMax, yMin, yMax, color)
+	-- add a new button. colors are optional.
 	b.text = text
 	b.callback = callback
 	b.x = { min = xMin, max = xMax }
@@ -43,6 +28,22 @@ Button = class(function (b, text, callback, xMin, xMax, yMin, yMax, color)
 	end
 
 	b:display()
+end)
+
+-- Find the monitor attached to the computer
+for i, side in pairs(rs.getSides()) do
+	if peripheral.getType(side) == "monitor" then
+		local monitor = peripheral.wrap(side)
+		if monitor.isColor() then
+			Button.monitor = monitor
+			break
+		end
+	end
+end
+
+-- Verify we have a monitor attached to the computer
+if not Button.monitor then
+	error("Button api requires an Advanced Monitor")
 end
 
 -- Draw the button on the designated monitor
@@ -102,10 +103,13 @@ function Button:hide()
 	self:display()
 end
 
-function Button:registerEvent(cce, callback)
+function Button:registerEvent(cce)
 	cce:register("monitor_touch", function(event, side, x, y)
 		if self.enabled and self.x.min <= x and self.x.max >= x and self.y.min <= y and self.y.max >= y then
-			callback(self, event, side, x, y)
+			-- Pass self as a callback argument so the callback can manipulate the button
+			return self.callback(self)
+		else
+			return false
 		end
 	end)
 end
