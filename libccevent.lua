@@ -27,16 +27,14 @@ function ccEvent:register(event, callback)
 end
 
 function ccEvent:doEventLoop()
-	print("Starting event loop")
 	while true do
-		print("Polling for event")
 		local result = {os.pullEvent()}
-		print("Got an event: [" .. table.concat(result, "] [") .. "]")
+		print("Event: [" .. table.concat(result, "] [") .. "]")
 		local event = result[1]
 
 		if self._handlers[event] ~= nil then
 			for k,handler in pairs(self._handlers[event]) do
-				print("Trying a handler: " .. tostring(k) .. " : " .. tostring(handler))
+				print("Trying handler " .. tostring(k) .. ": " .. tostring(handler))
 				if handler(unpack(result)) then break end
 			end
 		end
