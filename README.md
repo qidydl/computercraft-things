@@ -61,4 +61,5 @@ testButton:registerWith(eventHandler)
 testButton2:registerWith(eventHandler)
 
 -- Enter event loop
-eventHandler:doEventLoop()```
+eventHandler:doEventLoop()
+```
