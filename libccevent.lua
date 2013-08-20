@@ -8,12 +8,13 @@
 
 os.loadAPI("libccclass")
 
-ccEvent = class(function(cce)
+ccEvent = libccclass.class(function(cce)
 	-- Constructor
 	cce._handlers = {}
 end)
 
 function ccEvent:register(event, callback)
+	print("Registering handler for " .. event)
 	-- If nobody's registered for this event yet, initialize to empty handler list
 	if self._handlers[event] == nil then
 		self._handlers[event] = {}
@@ -21,15 +22,21 @@ function ccEvent:register(event, callback)
 
 	-- Add handler to the end of the list
 	table.insert(self._handlers[event], callback)
+
+	print("There are now " .. #self._handlers[event] .. " handlers for " .. event)
 end
 
 function ccEvent:doEventLoop()
+	print("Starting event loop")
 	while true do
+		print("Polling for event")
 		local result = {os.pullEvent()}
-		local event = result[0]
+		print("Got an event: [" .. table.concat(result, "] [") .. "]")
+		local event = result[1]
 
 		if self._handlers[event] ~= nil then
-			for handler in self._handlers[event] do
+			for k,handler in pairs(self._handlers[event]) do
+				print("Trying a handler: " .. tostring(k) .. " : " .. tostring(handler))
 				if handler(unpack(result)) then break end
 			end
 		end
