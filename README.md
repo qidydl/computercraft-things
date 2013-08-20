@@ -38,7 +38,7 @@ beyond the scope or capabilities of ComputerCraft.
 Note also that the granularity is only by event type at the moment; e.g. you can only register for all redstone events,
 not a specific type of redstone event. I'm thinking the best approach would be to create sub-libraries for specific
 event types, such as a "libCCEvent-Redstone" that handles all redstone events, but can distinguish between them in more
-detail, and then callbacks can be registered with the sub-library. If you then made some premade callback templates for
+detail, and then callbacks can be registered with the sub-library. If you then made some pre-made callback templates for
 different kinds of operations, you could effectively make an unlimited Programmable Rednet Controller. In theory.
 
 ### ccEvent methods
@@ -74,6 +74,7 @@ Method name | Description
 `enable()` | Enables a button. Default is enabled.
 `flash(interval)` | Disables the button, waits for the interval, and enables it again. The interval argument is optional and defaults to 0.15s.
 `hide()` | Hide the button. Default is visible.
+`setMonitor(monitorSide)` | Moves the button to the specified monitor side. Also removes it from the monitor it was previously on.
 `show()` | Show the button. Default is visible.
 `toggle()` | Toggle the button between enabled and disabled.
 
@@ -84,6 +85,7 @@ Attribute | Description
 `colors` | Table with keys `background`, `disabled`, `enabled`, `text`. See the colors API for valid values.
 `enabled` | True if the button is enabled. Switches the color used when rendering, can be used by the callback for other uses.
 `monitor` | Monitor the button is rendered to. See `setMonitor` above for remarks about multi-monitor use.
+`monitorSide` | The side that the monitor is attached to. Note that this *must* match `monitor` above, or things will break. Use `setMonitor`.
 `text` | Button text.
 `visible` | True if the button is visible. If false, the button cannot be clicked.
 `x` | Table with min/max values on the x axis (horizontal)
