@@ -101,8 +101,11 @@ Here's an example of how it all fits together:
 os.loadAPI("libccevent")
 os.loadAPI("libccbutton")
 
+-- Create a new event handler object
 eventHandler = libccevent.ccEvent()
 
+-- First test button: starts on default screen and moves itself to the right screen on first click, toggles state
+-- on every click.
 testButton = libccbutton.Button("Test", function(button)
 		print "Test button clicked!"
 		button:setMonitor("right")
@@ -110,22 +113,25 @@ testButton = libccbutton.Button("Test", function(button)
 		return true
 	end, 5, 15, 5, 15)
 
+-- Second test button: goes on default screen, toggles every click.
 testButton2 = libccbutton.Button("Test2", function(button)
 		print "Test2 button clicked!"
 		button:toggle()
 		return true
 	end, 20, 30, 5, 15)
 
+-- Third test button: goes on right screen, toggles every click.
 testButtonRight = libccbutton.Button("TestRight", function(button)
 		print "TestRight button clicked!"
 		button:toggle()
 		return true
 	end, 20, 30, 5, 15, nil, "right")
 
-
+-- Register buttons with the event handler.
 testButton:registerWith(eventHandler)
 testButton2:registerWith(eventHandler)
 testButtonRight:registerWith(eventHandler)
 
+-- Let the event handler process all events.
 eventHandler:doEventLoop()
 ```
