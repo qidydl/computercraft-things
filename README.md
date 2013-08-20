@@ -35,11 +35,15 @@ Demo
 
 Here's an example of how it all fits together:
 
-```os.loadAPI("libccevent")
-os.loadAPI("libccbutton")
+```lua
+os.loadAPI("libccevent") -- load event API
+os.loadAPI("libccbutton") -- load button API
+-- note that these will load the class API on their own
 
+-- Create an event handler
 eventHandler = libccevent.ccEvent()
 
+-- Add a button with a callback
 testButton = libccbutton.Button("Test", function(button)
 		print "Test button clicked!"
 		button:toggle()
@@ -52,7 +56,9 @@ testButton2 = libccbutton.Button("Test2", function(button)
 		return true
 	end, 20, 30, 5, 15)
 
+-- Register buttons with the event handler
 testButton:registerWith(eventHandler)
 testButton2:registerWith(eventHandler)
 
+-- Enter event loop
 eventHandler:doEventLoop()```
