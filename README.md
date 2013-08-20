@@ -68,7 +68,7 @@ And a log of the output from clicking on the button
 ### Button methods
 Method name | Description
 ------------|------------
-`Button(text, callback, xMin, xMax, yMin, yMax, colors, monitorSide)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively. MonitorSide specifies the side of the computer that the monitor you want to use is attached to. If left blank, it defaults to the first advanced monitor found.
+`Button(text`, `callback`, `xMin`, `xMax`, `yMin`, `yMax`, `colors`, `monitorSide)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively. MonitorSide specifies the side of the computer that the monitor you want to use is attached to. If left blank, it defaults to the first advanced monitor found.
 `disable()` | Disables a button. Default is enabled. Note that unlike cheusler's original code, you can click on a disabled button, but not an invisible one.
 `display()` | Display the button on screen.
 `enable()` | Enables a button. Default is enabled.
