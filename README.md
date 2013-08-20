@@ -56,6 +56,15 @@ This is an API for ComputerCraft's touch monitors, and is almost entirely lifted
 modified it to use libCCClass for cleaner syntax, and to use libCCEvent which makes it much easier to combine with
 other event handlers.
 
+Buttons can be added to multiple monitors:
+![Buttons displayed on a left and right monitor](Screenshots/2013-08-19_22.45.38.png)
+
+Clicking on a button correctly toggles the one on the monitor you clicked on:
+![Button on right monitor has been clicked and toggled to red](Screenshots/2013-08-19_22.45.51.png)
+
+And a log of the output from clicking on the button
+![Log output from clicking on the right button](Screenshots/2013-08-19_22.45.57.png)
+
 ### Button methods
 Method name | Description
 ------------|------------
