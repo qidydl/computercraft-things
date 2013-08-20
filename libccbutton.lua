@@ -81,12 +81,22 @@ function Button:display()
 
 		if y == center and self.visible then
 			local length = self.x.max - self.x.min
-			local space = string.rep(" ", (length - string.len(self.text)) / 2)
+			local space = ""
+			local text = ""
+			if length > string.len(self.text) then
+				-- Use spaces to center text if there's room
+				space = string.rep(" ", (length - string.len(self.text)) / 2)
+				text = self.text
+			else
+				-- Truncate text if there's not enough room
+				text = self.text:sub(1,length)
+			end
 
 			self.monitor.write(space)
-			self.monitor.write(self.text)
+			self.monitor.write(text)
 			self.monitor.write(space)
 
+			-- Extra space if we can't center it exactly
 			if string.len(space) * 2 + string.len(self.text) < length then
 				self.monitor.write(" ")
 			end
