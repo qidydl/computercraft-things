@@ -104,8 +104,8 @@ os.loadAPI("libccbutton")
 -- Create a new event handler object
 eventHandler = libccevent.ccEvent()
 
--- First test button: starts on default screen and moves itself to the right screen on first click, toggles state
--- on every click.
+-- First test button: starts on default screen and moves itself to the right
+-- screen on first click, toggles state on every click.
 testButton = libccbutton.Button("Test", function(button)
 		print "Test button clicked!"
 		button:setMonitor("right")
