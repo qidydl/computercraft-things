@@ -11,6 +11,7 @@ Note that for all of these files, the .lua extension must be removed if you save
 * [libCCClass](#libccclass)
 * [libCCEvent](#libccevent)
 * [libCCButton](#libccbutton)
+* [RedstoneDebugger](#redstonedebug)
 * [Combined Demo](#demo)
 
 <a name="libccclass"/>
@@ -90,6 +91,30 @@ Attribute | Description
 `visible` | True if the button is visible. If false, the button cannot be clicked.
 `x` | Table with min/max values on the x axis (horizontal)
 `y` | Table with min/max values on the y axis (vertical)
+
+<a name="redstonedebug"/>
+RedstoneDebugger
+----------------
+
+This library is more of a test application/proof of concept than something actually useful, but it shows some of the capabilities
+of libCCButton and libCCEvent. Create a RedstoneDebug object (optional parameters are x and y offset and side of the
+monitor to display on) and register it with a ccEvent object, and it will draw a button on the screen for every color of
+every side. Whenever a redstone signal is toggled on or off, it will update and show the buttons corresponding to every
+enabled redstone signal. Useful for attaching a secondary test monitor and showing raw redstone state to see if you got
+your cabling correct.
+
+```lua
+os.loadAPI("libccevent")
+os.loadAPI("redstoneDebug")
+
+eventHandler = libccevent.ccEvent()
+
+-- Offset by 0 along X axis and 10 along Y axis, display on right monitor
+rdbg = redstoneDebug.RedstoneDebug(0, 10, "right")
+rdbg:registerWith(eventHandler)
+
+eventHandler:doEventLoop()
+```
 
 <a name="demo"/>
 Combined Demo
