@@ -87,6 +87,11 @@ function Button:disable()
 	self:display()
 end
 
+function Button:toggle()
+	self.enabled = not self.enabled
+	self:display()
+end
+
 function Button:flash(interval)
 	self:disable()
 	sleep(interval or 0.15)
@@ -103,9 +108,9 @@ function Button:hide()
 	self:display()
 end
 
-function Button:registerEvent(cce)
+function Button:registerWith(cce)
 	cce:register("monitor_touch", function(event, side, x, y)
-		if self.enabled and self.x.min <= x and self.x.max >= x and self.y.min <= y and self.y.max >= y then
+		if self.visible and self.x.min <= x and self.x.max >= x and self.y.min <= y and self.y.max >= y then
 			-- Pass self as a callback argument so the callback can manipulate the button
 			return self.callback(self)
 		else
