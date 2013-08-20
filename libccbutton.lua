@@ -9,42 +9,63 @@
 os.loadAPI("libccclass")
 os.loadAPI("libccevent")
 
+-- Validate a monitor to see if it can be used
+function checkMonitor(monitorSide)
+	if peripheral.getType(monitorSide) == "monitor" then
+		local monitor = peripheral.wrap(monitorSide)
+		if monitor.isColor() then
+			return monitor
+		end
+	end
+
+	return nil
+end
+
 -- Define the Button class and constructor
-Button = libccclass.class(function (b, text, callback, xMin, xMax, yMin, yMax, color)
-	-- add a new button. colors are optional.
-	b.text = text
-	b.callback = callback
-	b.x = { min = xMin, max = xMax }
-	b.y = { min = yMin, max = yMax }
+Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax, color, monitorSide)
+	-- Add a new button. Colors are optional. Monitor Side is optional; if unspecified, we use the first one we can find.
+	this.text = text
+	this.callback = callback
+	this.x = { min = xMin, max = xMax }
+	this.y = { min = yMin, max = yMax }
 
-	b.enabled = true
-	b.visible = true
+	this.enabled = true
+	this.visible = true
 
-	b.colors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.red }
+	-- Populate default colors, override if any are passed in
+	this.colors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.red }
 	if color ~= nil and type(color) == "table" then
 		for k, v in pairs(color) do
-			b.colors[k] = v
+			this.colors[k] = v
 		end
 	end
 
-	b:display()
+	-- Check specified monitor side
+	if monitorSide ~= nil then
+		local monitor = checkMonitor(monitorSide)
+		if monitor ~= nil then
+			this.monitorSide = monitorSide
+			this.monitor = monitor
+		end
+	else
+		-- See if there's a usable monitor and go with the first one we find
+		for i, side in pairs(rs.getSides()) do
+			local monitor = checkMonitor(side)
+			if monitor ~= nil then
+				this.monitorSide = side
+				this.monitor = monitor
+				break
+			end
+		end
+	end
+
+	-- Verify we have a monitor attached to the computer
+	if not this.monitor then
+		error("Button API requires an Advanced Monitor")
+	end
+
+	this:display()
 end)
-
--- Find the monitor attached to the computer
-for i, side in pairs(rs.getSides()) do
-	if peripheral.getType(side) == "monitor" then
-		local monitor = peripheral.wrap(side)
-		if monitor.isColor() then
-			Button.monitor = monitor
-			break
-		end
-	end
-end
-
--- Verify we have a monitor attached to the computer
-if not Button.monitor then
-	error("Button api requires an Advanced Monitor")
-end
 
 -- Draw the button on the designated monitor
 function Button:display()
@@ -55,10 +76,10 @@ function Button:display()
 
 	local center = math.floor((self.y.min + self.y.max) / 2)
 
-	for j = self.y.min, self.y.max do
-		self.monitor.setCursorPos(self.x.min, j)
+	for y = self.y.min, self.y.max do
+		self.monitor.setCursorPos(self.x.min, y)
 
-		if j == center and self.visible then
+		if y == center and self.visible then
 			local length = self.x.max - self.x.min
 			local space = string.rep(" ", (length - string.len(self.text)) / 2)
 
@@ -110,7 +131,9 @@ end
 
 function Button:registerWith(cce)
 	cce:register("monitor_touch", function(event, side, x, y)
-		if self.visible and self.x.min <= x and self.x.max >= x and self.y.min <= y and self.y.max >= y then
+		if self.visible
+			and side == self.monitorSide
+			and self.x.min <= x and self.x.max >= x and self.y.min <= y and self.y.max >= y then
 			-- Pass self as a callback argument so the callback can manipulate the button
 			return self.callback(self)
 		else
@@ -119,10 +142,12 @@ function Button:registerWith(cce)
 	end)
 end
 
-function setMonitor(monitor)
-	if monitor == nil or not monitor.isColor() then
-		error("Button api requires an Advanced Monitor")
+function Button:setMonitor(monitorSide)
+	local monitor = checkMonitor(monitorSide)
+	if monitor == nil then
+		error("Button API requires an Advanced Monitor")
+	else
+		self.monitorSide = monitorSide
+		self.monitor = monitor
 	end
-
-	Button.monitor = monitor
 end
