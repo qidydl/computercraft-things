@@ -35,17 +35,16 @@ I might see if there's any way to do some sort of threading or coroutines or som
 different events to occur simultaneously, so that a blocking event handler can't stop up the whole system. That might be
 beyond the scope or capabilities of ComputerCraft.
 
-Note also that the granularity is only by event type at the moment, i.e. you can only register for "redstone" events,
+Note also that the granularity is only by event type at the moment; e.g. you can only register for all redstone events,
 not a specific type of redstone event. I'm thinking the best approach would be to create sub-libraries for specific
-event types, such as a libCCEvent-Redstone that handles all redstone events, but can distinguish between them in more
+event types, such as a "libCCEvent-Redstone" that handles all redstone events, but can distinguish between them in more
 detail, and then callbacks can be registered with the sub-library. If you then made some premade callback templates for
 different kinds of operations, you could effectively make an unlimited Programmable Rednet Controller. In theory.
 
 ### ccEvent methods
 Method name | Description
 ------------|------------
-`register(event, callback)` | Registers a handler for the given `event`. `callback` should accept the parameters provided
-by ComputerCraft for `event`, including the event name itself. For example, `monitor_touch` should accept `(event, side, x, y)`
+`register(event, callback)` | Registers a handler for the given `event`. `callback` should accept the parameters provided by ComputerCraft for `event`, including the event name itself. For example, `monitor_touch` should accept `(event, side, x, y)`
 `doEventLoop()` | Begins the event loop. Currently there is no way to exit out.
 
 <a name="libccbutton"/>
@@ -60,11 +59,8 @@ other event handlers.
 ### Button methods
 Method name | Description
 ------------|------------
-`Button(text, callback, xMin, xMax, yMin, yMax)` | Constructor; creates a new button. Colors is an optional table with
-keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`,
-`colors.black`, `colors.lime` and `colors.red`, respectively.
-`disable()` | Disables a button. Default is enabled. Note that unlike cheusler's original code, you can click on a
-disabled button, but not an invisible one.
+`Button(text, callback, xMin, xMax, yMin, yMax)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively.
+`disable()` | Disables a button. Default is enabled. Note that unlike cheusler's original code, you can click on a disabled button, but not an invisible one.
 `display()` | Display the button on screen.
 `enable()` | Enables a button. Default is enabled.
 `flash(interval)` | Disables the button, waits for the interval, and enables it again. The interval argument is optional and defaults to 0.15s.
@@ -77,8 +73,7 @@ Attribute | Description
 ----------|------------
 `callback` | Callback function, gets called with the button as argument when the button gets clicked.
 `colors` | Table with keys `background`, `disabled`, `enabled`, `text`. See the colors API for valid values.
-`enabled` | True if the button is enabled. Switches the color used when rendering, can be used by the callback for
-other uses.
+`enabled` | True if the button is enabled. Switches the color used when rendering, can be used by the callback for other uses.
 `monitor` | Monitor the button is rendered to. See `setMonitor` above for remarks about multi-monitor use.
 `text` | Button text.
 `visible` | True if the button is visible. If false, the button cannot be clicked.
