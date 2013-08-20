@@ -99,6 +99,8 @@ end
 function RedstoneDebug:registerWith(cce)
 	cce:register("redstone", function (event)
 		self:display()
+		-- Allow others to continue to process redstone events
+		return false
 	end)
 end
 
