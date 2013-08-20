@@ -68,7 +68,7 @@ And a log of the output from clicking on the button
 ### Button methods
 Method name | Description
 ------------|------------
-`Button(text, callback, xMin, xMax, yMin, yMax)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively.
+`Button(text, callback, xMin, xMax, yMin, yMax, colors, monitorSide)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively. MonitorSide specifies the side of the computer that the monitor you want to use is attached to. If left blank, it defaults to the first advanced monitor found.
 `disable()` | Disables a button. Default is enabled. Note that unlike cheusler's original code, you can click on a disabled button, but not an invisible one.
 `display()` | Display the button on screen.
 `enable()` | Enables a button. Default is enabled.
@@ -96,16 +96,14 @@ Combined Demo
 Here's an example of how it all fits together:
 
 ```lua
-os.loadAPI("libccevent") -- load event API
-os.loadAPI("libccbutton") -- load button API
--- note that these will load the class API on their own
+os.loadAPI("libccevent")
+os.loadAPI("libccbutton")
 
--- Create an event handler
 eventHandler = libccevent.ccEvent()
 
--- Add a button with a callback
 testButton = libccbutton.Button("Test", function(button)
 		print "Test button clicked!"
+		button:setMonitor("right")
 		button:toggle()
 		return true
 	end, 5, 15, 5, 15)
@@ -116,10 +114,16 @@ testButton2 = libccbutton.Button("Test2", function(button)
 		return true
 	end, 20, 30, 5, 15)
 
--- Register buttons with the event handler
+testButtonRight = libccbutton.Button("TestRight", function(button)
+		print "TestRight button clicked!"
+		button:toggle()
+		return true
+	end, 20, 30, 5, 15, nil, "right")
+
+
 testButton:registerWith(eventHandler)
 testButton2:registerWith(eventHandler)
+testButtonRight:registerWith(eventHandler)
 
--- Enter event loop
 eventHandler:doEventLoop()
 ```

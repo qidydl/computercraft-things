@@ -147,7 +147,16 @@ function Button:setMonitor(monitorSide)
 	if monitor == nil then
 		error("Button API requires an Advanced Monitor")
 	else
+		-- Remove button from existing monitor
+		local visibility = self.visible
+		self:hide()
+
+		-- Transfer button to new monitor
 		self.monitorSide = monitorSide
 		self.monitor = monitor
+
+		-- Restore visibility to previous state and refresh display
+		self.visible = visibility
+		self:display()
 	end
 end
