@@ -43,6 +43,17 @@ event types, such as a "libCCEvent-Redstone" that handles all redstone events, b
 detail, and then callbacks can be registered with the sub-library. If you then made some pre-made callback templates for
 different kinds of operations, you could effectively make an unlimited Programmable Rednet Controller. In theory.
 
+Note: Since libCCEvent simply runs through the list of handlers for each event in order, the order in which handlers are
+registered can have a performance impact. The handlers that accept the greatest number or percentage of events should be
+listed before the handlers that will run more rarely.
+
+### Periodic Timers
+libCCEvent has several built-in periodic timer events that can be subscribed to. They work slightly differently than the
+other events: all timer event handlers always get to run, and the return value doesn't have an effect. Currently, the
+events are `periodic_timer_1s`, `periodic_timer_5s`, and `periodic_timer_30s`. They're based on a single combined OS
+timer every 1 second with a tick count to divide it down for the longer periods. It also uses the `parallel` API to
+hopefully be a little more efficient if there are a number
+
 ### ccEvent methods
 Method name | Description
 ------------|------------
