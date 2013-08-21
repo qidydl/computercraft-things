@@ -78,6 +78,8 @@ function Tabs:addTab(text, callback)
 	self._lastID = self._lastID + 1
 
 	self:display()
+
+	return tabID
 end
 
 function Tabs:getTab(id)
@@ -144,10 +146,17 @@ function Tabs:setMonitor(monitorSide)
 	if monitor == nil then
 		error("Tabs API requires an Advanced Monitor")
 	else
+		-- Clear the old monitor
+		self.monitor.clear()
+
+		-- Move to the new monitor
 		self.monitorSide = monitorSide
 		self.monitor = monitor
+
 		for i, tab in pairs(self._tabs) do
 			tab.button:setMonitor(monitorSide)
 		end
+
+		self:display()
 	end
 end
