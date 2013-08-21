@@ -25,6 +25,7 @@ Tabs = libccclass.class(function (this, monitorSide)
 	-- Initialize to no tabs
 	this._tabs = {}
 	this._selectedTab = nil
+	this._lastID = 0
 
 	-- Check specified monitor side
 	if monitorSide ~= nil then
@@ -52,27 +53,88 @@ Tabs = libccclass.class(function (this, monitorSide)
 end)
 
 function Tabs:addTab(text, callback)
-	--TODO: callback needs to do a lot more, positions need to be calculated, etc.
+	local tabID = self._lastID + 1
+	local buttonX = 1
+	local lastTab = self:getTab(self._lastID)
+	if lastTab ~= nil then
+		-- calculate from existing buttons
+		buttonX = lastTab.button.x.max + 1
+	end
+
 	local newButton = libccbutton.Button(text, function(button)
-		button:enable()
-		return callback(self, button)
-	end, 5, 15, 5, 15)
+		self:selectTab(tabID)
+		return true
+	end, buttonX, buttonX + string.len(text) + 2, 1, 3, { disabled = colors.black }, self.monitorSide)
+
+	if lastTab ~= nil then
+		newButton:disable()
+	else
+		self._selectedTab = tabID
+	end
 
 	table.insert(self._tabs,
-		{ text = text, button = newButton, callback = callback })
+		{ id = tabID, text = text, button = newButton, callback = callback })
+
+	self._lastID = self._lastID + 1
+
+	self:display()
+end
+
+function Tabs:getTab(id)
+	for i, tab in pairs(self._tabs) do
+		if tab.id == id then
+			return tab
+		end
+	end
+
+	return nil
+end
+
+function Tabs:selectTab(id)
+	-- Inform old selected tab that it needs to clean up
+	local selectedTab = self:getTab(self._selectedTab)
+	if selectedTab ~= nil then
+		selectedTab.callback(self, false)
+	end
+
+	-- Update button state
+	for i, tab in pairs(self._tabs) do
+		if tab.id == id then
+			tab.button:enable()
+		else
+			tab.button:disable()
+		end
+	end
+
+	-- Update selected tab
+	self._selectedTab = id
 
 	self:display()
 end
 
 function Tabs:display()
-	--TODO: display all buttons
-	for tab in self._tabs do
+	self.monitor.clear()
+
+	-- Draw tab buttons
+	for i, tab in pairs(self._tabs) do
 		tab.button:display()
+	end
+
+	-- Draw tab separator
+	local w, h = self.monitor.getSize()
+	self.monitor.setTextColor(colors.white)
+	self.monitor.setCursorPos(1, 4)
+	self.monitor.write(string.rep("-", w))
+
+	-- Draw current tab, if it exists
+	local selectedTab = self:getTab(self._selectedTab)
+	if selectedTab ~= nil then
+		selectedTab.callback(self, true)
 	end
 end
 
 function Tabs:registerWith(cce)
-	for tab in self._tabs do
+	for i, tab in pairs(self._tabs) do
 		tab.button:registerWith(cce)
 	end
 end
@@ -84,5 +146,8 @@ function Tabs:setMonitor(monitorSide)
 	else
 		self.monitorSide = monitorSide
 		self.monitor = monitor
+		for i, tab in pairs(self._tabs) do
+			tab.button:setMonitor(monitorSide)
+		end
 	end
 end
