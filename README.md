@@ -168,6 +168,17 @@ Method name | Description
 
 ### Tabs demo
 
+The initial screen:
+![Tabbed dialog with three tabs, the first one is selected](Screenshots/2013-08-20_20.54.23.png)
+
+Selecting a different tab:
+![Tabbed dialog with three tabs, the second one is selected](Screenshots/2013-08-20_20.54.32.png)
+Note when we switch tabs, the state of the tab's controls is restored.
+
+Switching monitors:
+![Tabbed dialog displayed on a different monitor from where it started](Screenshots/2013-08-20_20.54.40.png)
+Switching tabs on the new monitor works exactly the same as it did on the first monitor, control state is restored.
+
 ```lua
 os.loadAPI("libccevent")
 os.loadAPI("libccbutton")
@@ -193,17 +204,23 @@ tabFredButton = libccbutton.Button("FredButton", function(button)
 		return true
 	end, 13, 25, 7, 9, nil, tabPanel.monitorSide, true)
 
--- Next, add the tabs to the tab panel
+-- Next, add the tabs to the tab panel with the callback functions that render the tab contents
 tabPanel:addTab("Test", function (tabs, visible)
+	-- Start below the tab border
 	tabs.monitor.setCursorPos(1, 5)
 	tabs.monitor.write("Test tab")
+
+	-- Ensure that our controls render on the monitor we're actually on
 	tabTestButton:setMonitor(tabs.monitorSide)
+
+	-- Display our controls when we're being shown; hide our controls when we're being hidden
 	if visible then
 		tabTestButton:show()
 	else
 		tabTestButton:hide()
 	end
 end)
+
 tabPanel:addTab("Fred Fred", function (tabs, visible)
 	tabs.monitor.setCursorPos(1, 5)
 	tabs.monitor.write("Fred tab")
@@ -214,6 +231,7 @@ tabPanel:addTab("Fred Fred", function (tabs, visible)
 		tabFredButton:hide()
 	end
 end)
+
 tabPanel:addTab("LongerButton", function (tabs, visible)
 	tabs.monitor.setCursorPos(1, 5)
 	tabs.monitor.write("Longer tab")
