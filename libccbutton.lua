@@ -22,7 +22,7 @@ function checkMonitor(monitorSide)
 end
 
 -- Define the Button class and constructor
-Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax, color, monitorSide)
+Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax, color, monitorSide, hidden)
 	-- Add a new button. Colors are optional. Monitor Side is optional; if unspecified, we use the first one we can find.
 	this.text = text
 	this.callback = callback
@@ -30,7 +30,7 @@ Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax
 	this.y = { min = yMin, max = yMax }
 
 	this.enabled = true
-	this.visible = true
+	this.visible = not hidden
 
 	-- Populate default colors, override if any are passed in
 	this.colors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.red }
