@@ -11,8 +11,9 @@ Note that for all of these files, the .lua extension must be removed if you save
 * [libCCClass](#libccclass)
 * [libCCEvent](#libccevent)
 * [libCCButton](#libccbutton)
+* [libCCTabs](#libcctabs)
+* [libRCBoiler](#librcboiler)
 * [RedstoneDebugger](#redstonedebug)
-* [Combined Demo](#demo)
 
 <a name="libccclass"/>
 libCCClass
@@ -69,12 +70,13 @@ And a log of the output from clicking on the button
 ### Button methods
 Method name | Description
 ------------|------------
-`Button(text`, `callback`, `xMin`, `xMax`, `yMin`, `yMax`, `colors`, `monitorSide)` | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively. MonitorSide specifies the side of the computer that the monitor you want to use is attached to. If left blank, it defaults to the first advanced monitor found.
+`Button`(`text`, `callback`, `xMin`, `xMax`, `yMin`, `yMax`, `colors`, `monitorSide`, `hidden`) | Constructor; creates a new button. Colors is an optional table with keys `text`, `background`, `enabled` and `disabled`. They are all optional and default to `colors.white`, `colors.black`, `colors.lime` and `colors.red`, respectively. MonitorSide specifies the side of the computer that the monitor you want to use is attached to. If left blank, it defaults to the first advanced monitor found. Hidden allows a button to start out not displayed; false or nil makes the button visible, true hides it.
 `disable()` | Disables a button. Default is enabled. Note that unlike cheusler's original code, you can click on a disabled button, but not an invisible one.
 `display()` | Display the button on screen.
 `enable()` | Enables a button. Default is enabled.
 `flash(interval)` | Disables the button, waits for the interval, and enables it again. The interval argument is optional and defaults to 0.15s.
 `hide()` | Hide the button. Default is visible.
+`registerWith(cce)` | Register the button with the specified libCCEvent event handler.
 `setMonitor(monitorSide)` | Moves the button to the specified monitor side. Also removes it from the monitor it was previously on.
 `show()` | Show the button. Default is visible.
 `toggle()` | Toggle the button between enabled and disabled.
@@ -88,37 +90,11 @@ Attribute | Description
 `monitor` | Monitor the button is rendered to. See `setMonitor` above for remarks about multi-monitor use.
 `monitorSide` | The side that the monitor is attached to. Note that this *must* match `monitor` above, or things will break. Use `setMonitor`.
 `text` | Button text.
-`visible` | True if the button is visible. If false, the button cannot be clicked.
+`visible` | True if the button is visible. If false, the button cannot be clicked and is not drawn on the screen.
 `x` | Table with min/max values on the x axis (horizontal)
 `y` | Table with min/max values on the y axis (vertical)
 
-<a name="redstonedebug"/>
-RedstoneDebugger
-----------------
-
-This library is more of a test application/proof of concept than something actually useful, but it shows some of the capabilities
-of libCCButton and libCCEvent. Create a RedstoneDebug object (optional parameters are x and y offset and side of the
-monitor to display on) and register it with a ccEvent object, and it will draw a button on the screen for every color of
-every side. Whenever a redstone signal is toggled on or off, it will update and show the buttons corresponding to every
-enabled redstone signal. Useful for attaching a secondary test monitor and showing raw redstone state to see if you got
-your cabling correct.
-
-```lua
-os.loadAPI("libccevent")
-os.loadAPI("redstoneDebug")
-
-eventHandler = libccevent.ccEvent()
-
--- Offset by 0 along X axis and 10 along Y axis, display on right monitor
-rdbg = redstoneDebug.RedstoneDebug(0, 10, "right")
-rdbg:registerWith(eventHandler)
-
-eventHandler:doEventLoop()
-```
-
-<a name="demo"/>
-Combined Demo
--------------
+### Combined Demo
 
 Here's an example of how it all fits together:
 
@@ -158,5 +134,113 @@ testButton2:registerWith(eventHandler)
 testButtonRight:registerWith(eventHandler)
 
 -- Let the event handler process all events.
+eventHandler:doEventLoop()
+```
+
+<a name="libcctabs"/>
+libCCTabs
+---------
+
+tabbed dialog API
+
+### Tab methods
+Method name | Description
+------------|------------
+`Tabs(monitorSide)` | todo
+`addTab(text, callback)` | todo
+`getTab(id)` | todo
+`selectTab(id)` | todo
+`display()` | todo
+`registerWith(cce)` | Register the tab dialog with the specified libCCEvent event handler. This must be done after all tabs have been added, and not before.
+`setMonitor(monitorSide)` | Moves the tab dialog to the specified monitor side. Also removes it from the monitor it was previously on.
+
+### Tabs demo
+
+```lua
+os.loadAPI("libccevent")
+os.loadAPI("libccbutton")
+os.loadAPI("libcctabs")
+
+eventHandler = libccevent.ccEvent()
+
+tabPanel = libcctabs.Tabs()
+
+-- Create controls for specific tabs
+tabTestButton = libccbutton.Button("TestButton", function(button)
+		button:toggle()
+		if button.enabled then
+			tabPanel:setMonitor("left")
+		else
+			tabPanel:setMonitor("right")
+		end
+		return true
+	end, 10, 22, 6, 8, nil, tabPanel.monitorSide, true)
+
+tabFredButton = libccbutton.Button("FredButton", function(button)
+		button:toggle()
+		return true
+	end, 13, 25, 7, 9, nil, tabPanel.monitorSide, true)
+
+-- Next, add the tabs to the tab panel
+tabPanel:addTab("Test", function (tabs, visible)
+	tabs.monitor.setCursorPos(1, 5)
+	tabs.monitor.write("Test tab")
+	tabTestButton:setMonitor(tabs.monitorSide)
+	if visible then
+		tabTestButton:show()
+	else
+		tabTestButton:hide()
+	end
+end)
+tabPanel:addTab("Fred Fred", function (tabs, visible)
+	tabs.monitor.setCursorPos(1, 5)
+	tabs.monitor.write("Fred tab")
+	tabFredButton:setMonitor(tabs.monitorSide)
+	if visible then
+		tabFredButton:show()
+	else
+		tabFredButton:hide()
+	end
+end)
+tabPanel:addTab("LongerButton", function (tabs, visible)
+	tabs.monitor.setCursorPos(1, 5)
+	tabs.monitor.write("Longer tab")
+end)
+
+-- Finally, register the tab panel and tab-specific controls
+tabPanel:registerWith(eventHandler)
+tabTestButton:registerWith(eventHandler)
+tabFredButton:registerWith(eventHandler)
+
+eventHandler:doEventLoop()
+```
+
+<a name="librcboiler"/>
+libRCBoiler
+-----------
+
+Railcraft boiler monitoring API
+
+<a name="redstonedebug"/>
+RedstoneDebugger
+----------------
+
+This library is more of a test application/proof of concept than something actually useful, but it shows some of the capabilities
+of libCCButton and libCCEvent. Create a RedstoneDebug object (optional parameters are x and y offset and side of the
+monitor to display on) and register it with a ccEvent object, and it will draw a button on the screen for every color of
+every side. Whenever a redstone signal is toggled on or off, it will update and show the buttons corresponding to every
+enabled redstone signal. Useful for attaching a secondary test monitor and showing raw redstone state to see if you got
+your cabling correct.
+
+```lua
+os.loadAPI("libccevent")
+os.loadAPI("redstoneDebug")
+
+eventHandler = libccevent.ccEvent()
+
+-- Offset by 0 along X axis and 10 along Y axis, display on right monitor
+rdbg = redstoneDebug.RedstoneDebug(0, 10, "right")
+rdbg:registerWith(eventHandler)
+
 eventHandler:doEventLoop()
 ```
