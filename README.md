@@ -52,7 +52,8 @@ libCCEvent has several built-in periodic timer events that can be subscribed to.
 other events: all timer event handlers always get to run, and the return value doesn't have an effect. Currently, the
 events are `periodic_timer_1s`, `periodic_timer_5s`, and `periodic_timer_30s`. They're based on a single combined OS
 timer every 1 second with a tick count to divide it down for the longer periods. It also uses the `parallel` API to
-hopefully be a little more efficient if there are a number
+hopefully be a little more efficient if there are a number of timer handlers. A side effect of this is that no parameters
+are passed to a periodic timer event handler.
 
 ### ccEvent methods
 Method name | Description
