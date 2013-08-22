@@ -8,22 +8,13 @@
 
 os.loadAPI("libccclass")
 os.loadAPI("libccevent")
-
--- Validate a monitor to see if it can be used
-function checkMonitor(monitorSide)
-	if peripheral.getType(monitorSide) == "monitor" then
-		local monitor = peripheral.wrap(monitorSide)
-		if monitor.isColor() then
-			return monitor
-		end
-	end
-
-	return nil
-end
+os.loadAPI("libccmultimon")
 
 -- Define the Button class and constructor
-Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax, color, monitorSide, hidden)
-	-- Add a new button. Colors are optional. Monitor Side is optional; if unspecified, we use the first one we can find.
+Button = libccclass.class(libccmultimon.MultiMon, function (this, text, callback, xMin, xMax, yMin, yMax, color, monitorSide, hidden)
+	-- Create a new button. Colors are optional. Monitor Side is optional; if unspecified, we use the first one we can find.
+	libccmultimon.MultiMon.init(this, monitorSide, true)
+
 	this.text = text
 	this.callback = callback
 	this.x = { min = xMin, max = xMax }
@@ -38,30 +29,6 @@ Button = libccclass.class(function (this, text, callback, xMin, xMax, yMin, yMax
 		for k, v in pairs(color) do
 			this.colors[k] = v
 		end
-	end
-
-	-- Check specified monitor side
-	if monitorSide ~= nil then
-		local monitor = checkMonitor(monitorSide)
-		if monitor ~= nil then
-			this.monitorSide = monitorSide
-			this.monitor = monitor
-		end
-	else
-		-- See if there's a usable monitor and go with the first one we find
-		for i, side in pairs(rs.getSides()) do
-			local monitor = checkMonitor(side)
-			if monitor ~= nil then
-				this.monitorSide = side
-				this.monitor = monitor
-				break
-			end
-		end
-	end
-
-	-- Verify we have a monitor attached to the computer
-	if not this.monitor then
-		error("Button API requires an Advanced Monitor")
 	end
 
 	this:display()
@@ -153,7 +120,8 @@ function Button:registerWith(cce)
 end
 
 function Button:setMonitor(monitorSide)
-	local monitor = checkMonitor(monitorSide)
+	local monitor = libccmultimon.checkMonitor(monitorSide, true)
+
 	if monitor == nil then
 		error("Button API requires an Advanced Monitor")
 	else

@@ -249,7 +249,9 @@ eventHandler:doEventLoop()
 libRCBoiler
 -----------
 
-Railcraft boiler monitoring API
+Railcraft boiler monitoring API, still in development.
+
+Event is "railcraft_boiler", boiler name, then one of temperature, temp_low, temp_critical, [tank]_capacity, [tank]_amount, [tank]_low, [tank]_critical
 
 <a name="redstonedebug"/>
 RedstoneDebugger

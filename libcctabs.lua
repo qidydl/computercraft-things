@@ -7,48 +7,23 @@
 os.loadAPI("libccclass")
 os.loadAPI("libccevent")
 os.loadAPI("libccbutton")
-
--- Validate a monitor to see if it can be used
-function checkMonitor(monitorSide)
-	if peripheral.getType(monitorSide) == "monitor" then
-		local monitor = peripheral.wrap(monitorSide)
-		if monitor.isColor() then
-			return monitor
-		end
-	end
-
-	return nil
-end
+os.loadAPI("libccmultimon")
 
 -- Define the tabbed interface class and constructor
-Tabs = libccclass.class(function (this, monitorSide)
+Tabs = libccclass.class(libccmultimon.MultiMon, function (this, color, monitorSide)
+	libccmultimon.MultiMon.init(this, monitorSide, true)
+
 	-- Initialize to no tabs
 	this._tabs = {}
 	this._selectedTab = nil
 	this._lastID = 0
 
-	-- Check specified monitor side
-	if monitorSide ~= nil then
-		local monitor = checkMonitor(monitorSide)
-		if monitor ~= nil then
-			this.monitorSide = monitorSide
-			this.monitor = monitor
+	-- Populate default colors, override if any are passed in
+	this._tabColors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.black }
+	if color ~= nil and type(color) == "table" then
+		for k, v in pairs(color) do
+			this._tabColors[k] = v
 		end
-	else
-		-- See if there's a usable monitor and go with the first one we find
-		for i, side in pairs(rs.getSides()) do
-			local monitor = checkMonitor(side)
-			if monitor ~= nil then
-				this.monitorSide = side
-				this.monitor = monitor
-				break
-			end
-		end
-	end
-
-	-- Verify we have a monitor attached to the computer
-	if not this.monitor then
-		error("Tabs API requires an Advanced Monitor")
 	end
 end)
 
@@ -64,7 +39,7 @@ function Tabs:addTab(text, callback)
 	local newButton = libccbutton.Button(text, function(button)
 		self:selectTab(tabID)
 		return true
-	end, buttonX, buttonX + string.len(text) + 2, 1, 3, { disabled = colors.black }, self.monitorSide)
+	end, buttonX, buttonX + string.len(text) + 2, 1, 3, self._tabColors, self.monitorSide)
 
 	if lastTab ~= nil then
 		newButton:disable()
@@ -103,6 +78,7 @@ function Tabs:selectTab(id)
 	for i, tab in pairs(self._tabs) do
 		if tab.id == id then
 			tab.button:enable()
+			--TODO: clear any highlight for the selected tab
 		else
 			tab.button:disable()
 		end
@@ -114,17 +90,25 @@ function Tabs:selectTab(id)
 	self:display()
 end
 
+--TODO: add highlight tab function (tabID, highlightType)
+-- sets highlight for the given tab, then calls display
+
 function Tabs:display()
 	self.monitor.clear()
 
 	-- Draw tab buttons
 	for i, tab in pairs(self._tabs) do
 		tab.button:display()
+		--TODO: if button is highlighted and not selected, draw highlight line
+		--self.monitor.setBackgroundColor(self._tabColors[highlightType])
+		--self.monitor.setCursorPos(button.x.min + 1, 3)
+		--self.monitor.write(string.rep(" ", string.len(button.text))
 	end
 
 	-- Draw tab separator
 	local w, h = self.monitor.getSize()
-	self.monitor.setTextColor(colors.white)
+	self.monitor.setBackgroundColor(self._tabColors.background)
+	self.monitor.setTextColor(self._tabColors.text)
 	self.monitor.setCursorPos(1, 4)
 	self.monitor.write(string.rep("-", w))
 
@@ -142,7 +126,7 @@ function Tabs:registerWith(cce)
 end
 
 function Tabs:setMonitor(monitorSide)
-	local monitor = checkMonitor(monitorSide)
+	local monitor = libccmultimon.checkMonitor(monitorSide)
 	if monitor == nil then
 		error("Tabs API requires an Advanced Monitor")
 	else
