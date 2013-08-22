@@ -7,22 +7,26 @@
 os.loadAPI("libccclass")
 os.loadAPI("libccevent")
 
-BoilerMonitor = libccclass.class(function (this, side, boilerName, alerts)
+-- Boiler types: 0 = solid-fueled, 1 = liquid-fueled
+BoilerMonitor = libccclass.class(function (this, side, boilerName, boilerType, alerts)
 	this._network = peripheral.wrap(side)
 	this._boilerName = boilerName
+	this._boilerType = boilerType
 	this._state = {
 		temperature = -1,
 		lowTemp = false,
 		criticalTemp = false,
 		needsFuel = false,
 		tanks = {
-			water = {
+			1 = {
+				name = "water",
 				amount = -1,
 				level = -1,
 				low = false,
 				critical = false
 			},
-			steam = {
+			2 = {
+				name = "steam",
 				amount = -1,
 				level = -1,
 				low = false,
@@ -30,6 +34,17 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, alerts)
 			}
 		}
 	}
+
+	if (this._boilerType == 1) then
+		this._state.tanks[3] = {
+			name = "fuel",
+			amount = -1,
+			level = -1,
+			low = false,
+			critical = false
+		}
+	end
+
 	if alerts ~= nil then
 		this._alerts = alerts
 	else
@@ -37,11 +52,15 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, alerts)
 			lowTemp = 500,
 			criticalTemp = 250,
 			tanks = {
-				water = {
+				1 = {
 					low = 0.66,
 					critical = 0.33
 				},
-				steam = {
+				2 = {
+					low = 0.5,
+					critical = 0.25
+				}
+				3 = {
 					low = 0.5,
 					critical = 0.25
 				}
@@ -50,39 +69,41 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, alerts)
 	end
 end)
 
-function BoilerMonitor:updateTank(tankName, capacity, amount)
-	if (capacity ~= self._state.tanks[tankName].capacity) then
-		self._state.tanks[tankName].capacity = capacity
+function BoilerMonitor:updateTank(tankID, capacity, amount)
+	local tankName = self._state.tanks[tankID].name
+	
+	if (capacity ~= self._state.tanks[tankID].capacity) then
+		self._state.tanks[tankID].capacity = capacity
 		os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_capacity", capacity)
 	end
 
-	if (amount ~= self._state.tanks[tankName].amount) then
-		self._state.tanks[tankName].amount = amount
+	if (amount ~= self._state.tanks[tankID].amount) then
+		self._state.tanks[tankID].amount = amount
 		os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_amount", amount)
 	end
 
 	-- Check for alert levels
 	local percentFull = amount / capacity
 
-	if (percentFull > self._alerts.tanks[tankName].low) then
-		self._state.tanks[tankName].low = false
-		self._state.tanks[tankName].critical = false
-	elseif (percentFull > self._alerts.tanks[tankName].critical) then
+	if (percentFull > self._alerts.tanks[tankID].low) then
+		self._state.tanks[tankID].low = false
+		self._state.tanks[tankID].critical = false
+	elseif (percentFull > self._alerts.tanks[tankID].critical) then
 		-- At or below the low level but still above critical
 		-- If it was not previously low, we've hit an edge, so fire an event
-		if not self._state.tanks[tankName].low then
+		if not self._state.tanks[tankID].low then
 			os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_low")
 		end
-		self._state.tanks[tankName].low = true
-		self._state.tanks[tankName].critical = false
+		self._state.tanks[tankID].low = true
+		self._state.tanks[tankID].critical = false
 	else
 		-- At or below the critical level
 		-- If it was not previously critical, we've hit an edge, so fire an event
-		if not self._state.tanks[tankName].critical then
+		if not self._state.tanks[tankID].critical then
 			os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_critical")
 		end
-		self._state.tanks[tankName].low = true
-		self._state.tanks[tankName].critical = true
+		self._state.tanks[tankID].low = true
+		self._state.tanks[tankID].critical = true
 	end
 end
 
@@ -118,19 +139,20 @@ function BoilerMonitor:registerWith(cce)
 		-- Look at every attached tank - side might not matter?
 		local tanks = self._network.callRemote(self._boilerName, "getTanks", "up")
 		for i, tank in pairs(tanks) do
+			-- Tanks without a name don't have data
 			if (tank.name ~= nil) then
-				self:updateTank(tank.name:sub(1,1):lower() .. tank.name:sub(2), tonumber(tank.capacity), tonumber(tank.amount))
+				self:updateTank(i, tonumber(tank.capacity), tonumber(tank.amount))
 			end
 		end
 		
 		-- Now check to see if tanks were not detected
-		for tankName, tankState in pairs(self._state.tanks) do
+		for tankID, tankState in pairs(self._state.tanks) do
 			if (tankState.amount == -1) then
-				if not self._state.tanks[tankName].critical then
-					os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_critical")
+				if not self._state.tanks[tankID].critical then
+					os.queueEvent("railcraft_boiler", self._boilerName, tankState.name .. "_critical")
 				end
-				self._state.tanks[tankName].low = true
-				self._state.tanks[tankName].critical = true
+				self._state.tanks[tankID].low = true
+				self._state.tanks[tankID].critical = true
 			end
 		end
 	end)
