@@ -18,14 +18,14 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, boilerType, a
 		criticalTemp = false,
 		needsFuel = false,
 		tanks = {
-			1 = {
+			[1] = {
 				name = "water",
 				amount = -1,
 				level = -1,
 				low = false,
 				critical = false
 			},
-			2 = {
+			[2] = {
 				name = "steam",
 				amount = -1,
 				level = -1,
@@ -52,15 +52,15 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, boilerType, a
 			lowTemp = 500,
 			criticalTemp = 250,
 			tanks = {
-				1 = {
+				[1] = {
 					low = 0.66,
 					critical = 0.33
 				},
-				2 = {
+				[2] = {
 					low = 0.5,
 					critical = 0.25
-				}
-				3 = {
+				},
+				[3] = {
 					low = 0.5,
 					critical = 0.25
 				}
