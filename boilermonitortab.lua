@@ -7,6 +7,19 @@ os.loadAPI("libccevent")
 os.loadAPI("libcctabs")
 os.loadAPI("librcboiler")
 
+-- Note: this function truncates, it does not round! This is fine for this case, we don't really care about
+-- that much precision for boiler temperature, but do not re-use this code elsewhere without considering the
+-- consequences.
+--
+-- Also note: string.format("%.2f", value) does not work at all; it just prints out the value with no precision
+-- formatting. Perhaps ComputerCraft's Lua is out of date and/or broken?
+function formatFloat(value, prec)
+	local str = string.format("%f", value)
+	local sep, junk = str:find(".", 1, true)
+
+	return str:sub(1, sep + prec)
+end
+
 -- Boiler types: 0 = solid-fueled, 1 = liquid-fueled
 BoilerMonitorTab = libccclass.class(function (self, side, boilerID, boilerName, boilerType)
 	self._networkSide = side
@@ -34,9 +47,35 @@ function BoilerMonitorTab:display()
 
 	-- Display boiler information
 	monitor.setCursorPos(1, 5)
+	monitor.clearLine()
 	monitor.write("Boiler Monitor Tab for " .. self._boilerName)
 	monitor.setCursorPos(1, 6)
-	monitor.write("Boiler Temperature: " .. self._boilerMonitor._state.temperature .. " C")
+	monitor.clearLine()
+	monitor.write("Boiler Temperature: " .. formatFloat(self._boilerMonitor._state.temperature, 2) .. " C")
+	monitor.setCursorPos(1, 7)
+	monitor.clearLine()
+	monitor.write("Boiler Water: ")
+	if (self._boilerMonitor._state.tanks[1].capacity == -1) then
+		monitor.write("empty!")
+	else
+		monitor.write(self._boilerMonitor._state.tanks[1].amount .. "/" .. self._boilerMonitor._state.tanks[1].capacity)
+	end
+	monitor.setCursorPos(1, 8)
+	monitor.clearLine()
+	monitor.write("Boiler Fuel: ")
+	if (self._boilerMonitor._state.tanks[3].capacity == -1) then
+		monitor.write("empty!")
+	else
+		monitor.write(self._boilerMonitor._state.tanks[3].amount .. "/" .. self._boilerMonitor._state.tanks[3].capacity)
+	end
+	monitor.setCursorPos(1, 9)
+	monitor.clearLine()
+	monitor.write("Boiler Steam: ")
+	if (self._boilerMonitor._state.tanks[2].capacity == -1) then
+		monitor.write("empty!")
+	else
+		monitor.write(self._boilerMonitor._state.tanks[2].amount .. "/" .. self._boilerMonitor._state.tanks[2].capacity)
+	end
 end
 
 function BoilerMonitorTab:registerWith(cce)
@@ -45,8 +84,6 @@ function BoilerMonitorTab:registerWith(cce)
 	cce:register("railcraft_boiler", function(event, boilerID, boilerEvent, param)
 		if (boilerID == self._boilerID) then
 			-- Handle events
-			print("BMTab received [" .. event .. "] [" .. boilerID .. "] [" .. boilerEvent .. "]")
-
 			if (self._tabDialog._selectedTab == self._tabID) then
 				self:display()
 			else
