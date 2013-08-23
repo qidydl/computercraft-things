@@ -16,7 +16,6 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, boilerType, a
 		temperature = -1,
 		lowTemp = false,
 		criticalTemp = false,
-		needsFuel = false,
 		tanks = {
 			[1] = {
 				name = "water",
@@ -68,7 +67,7 @@ end)
 
 function BoilerMonitor:updateTank(tankID, capacity, amount)
 	local tankName = self._state.tanks[tankID].name
-	
+
 	if (capacity ~= self._state.tanks[tankID].capacity) then
 		self._state.tanks[tankID].capacity = capacity
 		os.queueEvent("railcraft_boiler", self._boilerName, tankName .. "_capacity", capacity)
@@ -80,7 +79,10 @@ function BoilerMonitor:updateTank(tankID, capacity, amount)
 	end
 
 	-- Check for alert levels
-	local percentFull = amount / capacity
+	local percentFull = 0
+	if (amount > 0) and (capacity > 0) then
+		percentFull = amount / capacity
+	end
 
 	if (percentFull > self._alerts.tanks[tankID].low) then
 		self._state.tanks[tankID].low = false
@@ -130,15 +132,8 @@ function BoilerMonitor:registerWith(cce)
 			self._state.criticalTemp = false
 		end
 
-		-- Check to see if we need fuel
-		local needsFuel = self._network.callRemote(self._boilerName, "needsFuel")
-		if (needsFuel and not self._state.needsFuel) then
-			os.queueEvent("railcraft_boiler", self._boilerName, "fuelSupply_critical")
-		end
-		self._state.needsFuel = needsFuel
-
+		-- Solid-fueled boiler: update the "fuel tank" based on inventory
 		if (self._boilerType == 0) then
-			-- Solid-fueled boiler: update the "fuel tank" based on inventory
 			-- Slot 2 seems to be the primary fuel slot where it goes to burn
 			local fuelInv = self._network.callRemote(self._boilerName, "getStackInSlot", 2)
 
