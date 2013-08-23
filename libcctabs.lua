@@ -25,6 +25,13 @@ Tabs = libccclass.class(libccmultimon.MultiMon, function (this, color, monitorSi
 			this._tabColors[k] = v
 		end
 	end
+
+	-- Priority of highlights
+	this._highlightPriority = {
+		background = 0,
+		warning = 1,
+		danger = 2
+	}
 end)
 
 function Tabs:addTab(text, callback)
@@ -48,7 +55,7 @@ function Tabs:addTab(text, callback)
 	end
 
 	table.insert(self._tabs,
-		{ id = tabID, text = text, button = newButton, callback = callback, highlight = self._tabColors.background })
+		{ id = tabID, text = text, button = newButton, callback = callback, highlight = "background" })
 
 	self._lastID = self._lastID + 1
 
@@ -78,7 +85,7 @@ function Tabs:selectTab(id)
 	for i, tab in pairs(self._tabs) do
 		if tab.id == id then
 			tab.button:enable()
-			tab.highlight = self._tabColors.background
+			tab.highlight = "background"
 		else
 			tab.button:disable()
 		end
@@ -96,6 +103,7 @@ function Tabs:highlightTab(tabID, highlightType)
 	if		(self._tabColors[highlightType] ~= nil)
 		and (highlightTab ~= nil) 
 		and (self._selectedTab ~= tabID)
+		and (self._highlightPriority[highlightType] > self._highlightPriority[highlightTab.highlight])
 	then
 		highlightTab.highlight = highlightType
 		self:display()
@@ -109,7 +117,7 @@ function Tabs:display()
 	for i, tab in pairs(self._tabs) do
 		tab.button:display()
 		-- If button is highlighted and not selected, draw highlight line
-		if (self._selectedTab ~= tab.id) and (tab.highlight ~= self._tabColors.background) then
+		if (self._selectedTab ~= tab.id) and (tab.highlight ~= "background") then
 			self.monitor.setBackgroundColor(self._tabColors[tab.highlight])
 			self.monitor.setCursorPos(tab.button.x.min + 1, 3)
 			self.monitor.write(string.rep(" ", string.len(tab.text)))
