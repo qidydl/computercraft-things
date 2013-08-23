@@ -19,7 +19,7 @@ Tabs = libccclass.class(libccmultimon.MultiMon, function (this, color, monitorSi
 	this._lastID = 0
 
 	-- Populate default colors, override if any are passed in
-	this._tabColors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.black }
+	this._tabColors = { text = colors.white, background = colors.black, enabled = colors.lime, disabled = colors.black, warning = colors.orange, danger = colors.red }
 	if color ~= nil and type(color) == "table" then
 		for k, v in pairs(color) do
 			this._tabColors[k] = v
@@ -48,7 +48,7 @@ function Tabs:addTab(text, callback)
 	end
 
 	table.insert(self._tabs,
-		{ id = tabID, text = text, button = newButton, callback = callback })
+		{ id = tabID, text = text, button = newButton, callback = callback, highlight = self._tabColors.background })
 
 	self._lastID = self._lastID + 1
 
@@ -78,7 +78,7 @@ function Tabs:selectTab(id)
 	for i, tab in pairs(self._tabs) do
 		if tab.id == id then
 			tab.button:enable()
-			--TODO: clear any highlight for the selected tab
+			tab.highlight = self._tabColors.background
 		else
 			tab.button:disable()
 		end
@@ -90,8 +90,17 @@ function Tabs:selectTab(id)
 	self:display()
 end
 
---TODO: add highlight tab function (tabID, highlightType)
--- sets highlight for the given tab, then calls display
+function Tabs:highlightTab(tabID, highlightType)
+	local highlightTab = self:getTab(tabID)
+
+	if		(self._tabColors[highlightType] ~= nil)
+		and (highlightTab ~= nil) 
+		and (self._selectedTab ~= tabID)
+	then
+		highlightTab.highlight = highlightType
+		self:display()
+	end
+end
 
 function Tabs:display()
 	self.monitor.clear()
@@ -99,10 +108,12 @@ function Tabs:display()
 	-- Draw tab buttons
 	for i, tab in pairs(self._tabs) do
 		tab.button:display()
-		--TODO: if button is highlighted and not selected, draw highlight line
-		--self.monitor.setBackgroundColor(self._tabColors[highlightType])
-		--self.monitor.setCursorPos(button.x.min + 1, 3)
-		--self.monitor.write(string.rep(" ", string.len(button.text))
+		-- If button is highlighted and not selected, draw highlight line
+		if (self._selectedTab ~= tab.id) and (tab.highlight ~= self._tabColors.background) then
+			self.monitor.setBackgroundColor(self._tabColors[tab.highlight])
+			self.monitor.setCursorPos(tab.button.x.min + 1, 3)
+			self.monitor.write(string.rep(" ", string.len(tab.text)))
+		end
 	end
 
 	-- Draw tab separator
