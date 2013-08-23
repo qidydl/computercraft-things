@@ -21,29 +21,26 @@ BoilerMonitor = libccclass.class(function (this, side, boilerName, boilerType, a
 			[1] = {
 				name = "water",
 				amount = -1,
-				level = -1,
+				capacity = -1,
 				low = false,
 				critical = false
 			},
 			[2] = {
 				name = "steam",
 				amount = -1,
-				level = -1,
+				capacity = -1,
+				low = false,
+				critical = false
+			},
+			[3] = {
+				name = "fuel",
+				amount = -1,
+				capacity = -1,
 				low = false,
 				critical = false
 			}
 		}
 	}
-
-	if (this._boilerType == 1) then
-		this._state.tanks[3] = {
-			name = "fuel",
-			amount = -1,
-			level = -1,
-			low = false,
-			critical = false
-		}
-	end
 
 	if alerts ~= nil then
 		this._alerts = alerts
@@ -135,6 +132,23 @@ function BoilerMonitor:registerWith(cce)
 
 		-- Check to see if we need fuel
 		local needsFuel = self._network.callRemote(self._boilerName, "needsFuel")
+		if (needsFuel and not self._state.needsFuel) then
+			os.queueEvent("railcraft_boiler", self._boilerName, "fuelSupply_critical")
+		end
+		self._state.needsFuel = needsFuel
+
+		if (self._boilerType == 0) then
+			-- Solid-fueled boiler: update the "fuel tank" based on inventory
+			-- Slot 2 seems to be the primary fuel slot where it goes to burn
+			local fuelInv = self._network.callRemote(self._boilerName, "getStackInSlot", 2)
+
+			-- If there's no fuel at all, we get a nil result
+			if (fuelInv ~= nil) then
+				self:updateTank(3, 64, tonumber(fuelInv.qty))
+			else
+				self:updateTank(3, 64, -1)
+			end
+		end
 
 		-- Look at every attached tank - side might not matter?
 		local tanks = self._network.callRemote(self._boilerName, "getTanks", "up")
@@ -142,6 +156,8 @@ function BoilerMonitor:registerWith(cce)
 			-- Tanks without a name don't have data
 			if (tank.name ~= nil) then
 				self:updateTank(i, tonumber(tank.capacity), tonumber(tank.amount))
+			else
+				self:updateTank(i, -1, -1)
 			end
 		end
 		
