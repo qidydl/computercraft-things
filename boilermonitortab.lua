@@ -20,12 +20,64 @@ function formatFloat(value, prec)
 	return str:sub(1, sep + prec)
 end
 
+-- Draws a bar on the screen filled up to fillPercent
+function drawBar(monitor, xCoord, yCoord, width, height, fillPercent, colorsParam)
+	local barColors = { background = colors.black, outline = colors.white, fill = colors.white }
+
+	-- Override colors with parameters if present
+	if colorsParam ~= nil and type(colorsParam) == "table" then
+		for k, v in pairs(colorsParam) do
+			barColors[k] = v
+		end
+	end
+
+	-- Calculate bar height
+	local innerHeight = height - 2
+	local barHeight = math.ceil(innerHeight * fillPercent)
+	local spaceHeight = innerHeight - barHeight
+
+	-- Set up monitor
+	monitor.setCursorPos(xCoord, yCoord)
+	monitor.setBackgroundColor(barColors.background)
+	monitor.setTextColor(barColors.outline)
+
+	-- Top line
+	monitor.write("+" .. string.rep("-", width - 2) .. "+")
+
+	-- Space lines
+	for y=0,spaceHeight do
+		-- +1 to account for top line
+		monitor.setCursorPos(xCoord, yCoord + y + 1)
+		monitor.write("|" .. string.rep(" ", width - 2) .. "|")
+	end
+
+	-- Bar lines
+	for y=spaceHeight,innerHeight-1 do
+		monitor.setCursorPos(xCoord, yCoord + y + 1)
+		monitor.write("|")
+
+		monitor.setCursorPos(xCoord + 1, yCoord + y + 1)
+		monitor.setBackgroundColor(barColors.fill)
+		monitor.write(string.rep(" ", width - 2))
+
+		monitor.setCursorPos(xCoord + width - 1, yCoord + y + 1)
+		monitor.setBackgroundColor(barColors.background)
+		monitor.write("|")
+	end
+
+	-- Bottom line
+	monitor.setCursorPos(xCoord, yCoord + height - 1)
+	monitor.write("+" .. string.rep("-", width - 2) .. "+")
+end
+
 -- Boiler types: 0 = solid-fueled, 1 = liquid-fueled
-BoilerMonitorTab = libccclass.class(function (self, side, boilerID, boilerName, boilerType)
+-- Boiler pressures: 0 = low pressure, 1 = high pressure
+BoilerMonitorTab = libccclass.class(function (self, side, boilerID, boilerName, boilerType, boilerPressure)
 	self._networkSide = side
 	self._boilerID = boilerID
 	self._boilerName = boilerName
 	self._boilerType = boilerType
+	self._boilerPressure = boilerPressure
 
 	self._boilerMonitor = librcboiler.BoilerMonitor(side, boilerID, boilerType)
 end)
@@ -46,36 +98,64 @@ function BoilerMonitorTab:display()
 	local monitor = self._tabDialog.monitor
 
 	-- Display boiler information
+
+	-- Steam
+	local steamTank = self._boilerMonitor._state.tanks[2]
+	local steamLevel = steamTank.amount / steamTank.capacity
+	local steam = tostring(steamTank.amount)
+	if (steamTank.amount == -1) then
+		steamLevel = 0
+		steam = "Empty"
+	end
+
 	monitor.setCursorPos(1, 5)
-	monitor.clearLine()
-	monitor.write("Boiler Monitor Tab for " .. self._boilerName)
-	monitor.setCursorPos(1, 6)
-	monitor.clearLine()
-	monitor.write("Boiler Temperature: " .. formatFloat(self._boilerMonitor._state.temperature, 2) .. " C")
-	monitor.setCursorPos(1, 7)
-	monitor.clearLine()
-	monitor.write("Boiler Water: ")
-	if (self._boilerMonitor._state.tanks[1].capacity == -1) then
-		monitor.write("empty!")
-	else
-		monitor.write(self._boilerMonitor._state.tanks[1].amount .. "/" .. self._boilerMonitor._state.tanks[1].capacity)
+	monitor.write("Steam")
+	drawBar(monitor, 1, 6, 6, 12, steamLevel, { fill = colors.white })
+	monitor.setCursorPos(1, 18)
+	monitor.write(string.rep(" ", math.floor((6 - string.len(steam)) / 2)) .. steam)
+
+	-- Temperature
+	local maxTemp = 500
+	if (self._boilerPressure == 1) then
+		maxTemp = 1000
 	end
-	monitor.setCursorPos(1, 8)
-	monitor.clearLine()
-	monitor.write("Boiler Fuel: ")
-	if (self._boilerMonitor._state.tanks[3].capacity == -1) then
-		monitor.write("empty!")
-	else
-		monitor.write(self._boilerMonitor._state.tanks[3].amount .. "/" .. self._boilerMonitor._state.tanks[3].capacity)
+
+	monitor.setCursorPos(8, 5)
+	monitor.write("Temp C")
+	drawBar(monitor, 8, 6, 6, 12, self._boilerMonitor._state.temperature / maxTemp, { fill = colors.red })
+	monitor.setCursorPos(8, 18)
+	local temp = formatFloat(self._boilerMonitor._state.temperature, 1)
+	monitor.write(string.rep(" ", math.floor((6 - string.len(temp)) / 2)) .. temp)
+
+	-- Fuel
+	local fuelTank = self._boilerMonitor._state.tanks[3]
+	local fuelLevel = fuelTank.amount / fuelTank.capacity
+	local fuel = tostring(fuelTank.amount)
+	if (fuelTank.amount == -1) then
+		fuelLevel = 0
+		fuel = "Empty"
 	end
-	monitor.setCursorPos(1, 9)
-	monitor.clearLine()
-	monitor.write("Boiler Steam: ")
-	if (self._boilerMonitor._state.tanks[2].capacity == -1) then
-		monitor.write("empty!")
-	else
-		monitor.write(self._boilerMonitor._state.tanks[2].amount .. "/" .. self._boilerMonitor._state.tanks[2].capacity)
+
+	monitor.setCursorPos(15, 5)
+	monitor.write(" Fuel")
+	drawBar(monitor, 15, 6, 6, 12, fuelLevel, { fill = colors.orange })
+	monitor.setCursorPos(15, 18)
+	monitor.write(string.rep(" ", math.floor((6 - string.len(fuel)) / 2)) .. fuel)
+
+	-- Water
+	local waterTank = self._boilerMonitor._state.tanks[1]
+	local waterLevel = waterTank.amount / waterTank.capacity
+	local water = tostring(waterTank.amount)
+	if (waterTank.amount == -1) then
+		waterLevel = 0
+		water = "Empty"
 	end
+
+	monitor.setCursorPos(22, 5)
+	monitor.write("Water")
+	drawBar(monitor, 22, 6, 6, 12, waterLevel, { fill = colors.blue })
+	monitor.setCursorPos(22, 18)
+	monitor.write(string.rep(" ", math.floor((6 - string.len(water)) / 2)) .. water)
 end
 
 function BoilerMonitorTab:registerWith(cce)
