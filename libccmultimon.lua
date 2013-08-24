@@ -10,7 +10,8 @@ os.loadAPI("libccclass")
 function checkMonitor(monitorSide, requireAdvanced)
 	if peripheral.getType(monitorSide) == "monitor" then
 		local monitor = peripheral.wrap(monitorSide)
-		if (not requireAdvanced) or monitor.isColor() then
+		local isAdvanced = monitor.isColor and monitor.isColor()
+		if (not requireAdvanced) or isAdvanced then
 			return monitor
 		end
 	end

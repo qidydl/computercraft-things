@@ -121,7 +121,7 @@ function BoilerMonitor:registerWith(cce)
 			end
 			self._state.lowTemp = true
 			self._state.criticalTemp = true
-		elseif (temperature < self.alerts.lowTemp) then
+		elseif (temperature < self._alerts.lowTemp) then
 			if not self._state.lowTemp then
 				os.queueEvent("railcraft_boiler", self._boilerName, "temp_low")
 			end

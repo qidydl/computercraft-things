@@ -102,16 +102,18 @@ function BoilerMonitorTab:display()
 	-- Steam
 	local steamTank = self._boilerMonitor._state.tanks[2]
 	local steamLevel = steamTank.amount / steamTank.capacity
-	local steam = tostring(steamTank.amount)
+	local steam = tostring(math.floor(steamTank.amount / 1000)) .. "k"
 	if (steamTank.amount == -1) then
 		steamLevel = 0
 		steam = "Empty"
 	end
 
 	monitor.setCursorPos(1, 5)
+	monitor.clearLine()
 	monitor.write("Steam")
 	drawBar(monitor, 1, 6, 6, 12, steamLevel, { fill = colors.white })
 	monitor.setCursorPos(1, 18)
+	monitor.clearLine()
 	monitor.write(string.rep(" ", math.floor((6 - string.len(steam)) / 2)) .. steam)
 
 	-- Temperature
